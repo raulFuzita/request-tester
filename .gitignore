@@ -1,0 +1,11 @@
+.env
+notes.txt
+__pycache__/
+*.log
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+dist/
+build/
+backup/

@@ -1,6 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
 from typing import Type, Generic, TypeVar
-from sqlalchemy import update
 from ...dbconnector.db_connector_manager import DatabaseConnectionManager
 
 T = TypeVar('T', bound=DeclarativeBase)
@@ -29,14 +28,7 @@ class RepositoryDAO(Generic[T]):
 
     def update(self, cls: T):
         session = self._get_session()
-        cls_dict = cls.to_dict(include_relationships=False)
-        print(cls_dict)  # Debug output here
-        stmt = (
-            update(self.model)
-            .where(self.model.id == cls.id)
-            .values(**cls_dict)
-        )
-        session.execute(stmt)
+        session.merge(cls)
         session.commit()
 
     def delete(self, cls_id: int):

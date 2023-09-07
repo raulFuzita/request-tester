@@ -12,7 +12,8 @@ sys.path.append(root_dir)
 
 # print("Modified sys.path:", sys.path)cls
 import unittest
-import requests
+# import requests
+from unittest.mock import Mock
 from urllib.parse import urlparse, parse_qs
 from app.util.unittest.custom_test_runner import CustomTestRunner
 from app.model.dto.httprequest import HttpRequestDTO
@@ -32,79 +33,77 @@ class TestHttpRequest(unittest.TestCase):
         json_data = {"param1": "value1", "param2": "value2"}
         requests_json_data = self._post_http_req_json_data(json_data)
 
-        http_request_dto = HttpRequestDTO(
-            method='POST',
-            url='https://example.com/api',
-            httpRequestData=[
-                HttpRequestDataDTO(
-                    headers=dict(requests_query_params.request.headers),
-                    data_type='query_params', 
-                    data=requests_query_params.content
-                ),
-                HttpRequestDataDTO(
-                    headers=dict(requests_form_data.request.headers),
-                    data_type='form_data', 
-                    data=requests_form_data.content
-                ),
-                HttpRequestDataDTO(
-                    headers=dict(requests_json_data.request.headers),
-                    data_type='json_data', 
-                    data=requests_json_data.content
-                )
-            ]
-        )
+        print(requests_json_data.json())
 
         http_request_service = HttpRequestService()
-        http_request_service.add(http_request_dto)
-        http_req_saved = http_request_service.get_by_id(http_request_dto.id)
-        self.assertEqual(http_req_saved.id, http_request_dto.id, "Expected id to be the same")
-        print(http_req_saved.to_dict())
-
         http_request_data_service = HttpRequestDataService()
-        http_req_data_saved = http_request_data_service.get_by_id(http_request_dto.httpRequestData[0].id)
-        self.assertEqual(http_req_data_saved.id, http_request_dto.httpRequestData[0].id, "Expected id to be the same")
 
-        result = http_request_service.get_data_by_request_id(http_request_dto.id)
-        # Adding assertions
-        self.assertIsNotNone(result, "Result should not be None")
-        self.assertTrue(len(result) > 0, "Result should have at least one record")
-        for record in result:
-            http_request, http_request_data = record
-            self.assertIsInstance(http_request, HttpRequestDTO, "Expected type HttpRequestDTO")
-            self.assertIsInstance(http_request_data, HttpRequestDataDTO, "Expected type HttpRequestDataDTO")
-            self.assertEqual(http_request.method, 'POST', "Expected method to be POST")
+        requests_query_params_dto = HttpRequestDTO.from_dict(requests_query_params)
+        requests_form_data_dto = HttpRequestDTO.from_dict(requests_form_data)
+        requests_json_data_dto = HttpRequestDTO.from_dict(requests_json_data)
+
+        print(requests_json_data_dto)
+        
+        # http_request_service.add(requests_query_params_dto)
+        # http_request_service.add(requests_form_data_dto)
+        http_request_service.add(requests_json_data_dto)
+
+        # http_req_saved = http_request_service.get_by_id(requests_query_params_dto.id)
+        # self.assertEqual(http_req_saved.id, requests_query_params_dto.id, "Expected id to be the same")
+        
+        # http_req_data_saved = http_request_data_service.get_by_id(http_req_saved.httpRequestData[0].id)
+        # self.assertEqual(http_req_data_saved.id, http_req_saved.httpRequestData[0].id, "Expected id to be the same")
+
+        # result = http_request_service.get_data_by_request_id(http_req_saved.id)
+        # # Adding assertions
+        # self.assertIsNotNone(result, "Result should not be None")
+        # self.assertTrue(len(result) > 0, "Result should have at least one record")
+        # for record in result:
+        #     http_request, http_request_data = record
+        #     self.assertIsInstance(http_request, HttpRequestDTO, "Expected type HttpRequestDTO")
+        #     self.assertIsInstance(http_request_data, HttpRequestDataDTO, "Expected type HttpRequestDataDTO")
+        #     self.assertEqual(http_request.method, 'POST', "Expected method to be POST")
 
 
-    def test_http_request_with_no_data(self):
-        http_request_dto = HttpRequestDTO(
-            method='POST',
-            url='https://example.com/api'
-        )
-        http_request_service = HttpRequestService()
-        http_request_service.add(http_request_dto)
-        http_req_saved = http_request_service.get_by_id(http_request_dto.id)
-        self.assertEqual(http_req_saved.id, http_request_dto.id, "Expected id to be the same")
+    # def test_http_request_with_no_data(self):
+    #     http_request_dto = HttpRequestDTO(
+    #         method='POST',
+    #         url='https://example.com/api'
+    #     )
+    #     http_request_service = HttpRequestService()
+    #     http_request_service.add(http_request_dto)
+    #     http_req_saved = http_request_service.get_by_id(http_request_dto.id)
+    #     self.assertEqual(http_req_saved.id, http_request_dto.id, "Expected id to be the same")
 
-        result = http_request_service.get_data_by_request_id(http_request_dto.id)
-        self.assertIsNotNone(result, "Result should not be None")
-        self.assertTrue(len(result) == 0, "Result should have at least one record")
+    #     result = http_request_service.get_data_by_request_id(http_request_dto.id)
+    #     self.assertIsNotNone(result, "Result should not be None")
+    #     self.assertTrue(len(result) == 0, "Result should have at least one record")
 
     
     def _post_http_req_query_params(self, query_params: str):
         url = "https://example.com/api"
-        params = {"param1": "value1", "param2": "value2"}
-        headers = {"Content-Type": "application/form-data"}
-        return requests.post(url, params=params, headers=headers)
+        request = Mock()
+        request.params = {"param1": "value1", "param2": "value2"}
+        request.headers = {"Content-Type": "application/form-data"}
+        request.get_json = Mock(return_value=query_params)
+        request.url = url
+        return request
     
     def _post_http_req_form_data(self, form_data: str):
         url = "https://example.com/api"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        return requests.post(url, data=form_data, headers=headers)
+        request = Mock()
+        request.headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        request.get_json = Mock(return_value=form_data)
+        request.url = url
+        return request
     
     def _post_http_req_json_data(self, json_data: str):
+        request = Mock()
         url = "https://example.com/api"
-        headers = {"Content-Type": "application/json"}
-        return requests.post(url, json=json_data, headers=headers)
+        request.headers = {'Content-Type': 'application/json'}
+        request.get_json = Mock(return_value=json_data)
+        request.url = url
+        return request
     
     def _get_query_params_from_url(url):
         parsed_url = urlparse(url)

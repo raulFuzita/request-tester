@@ -162,6 +162,7 @@ cython_debug/
 =======
 .env
 notes.txt
+database.db
 __pycache__/
 *.log
 *.pyc

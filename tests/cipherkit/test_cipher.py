@@ -20,11 +20,19 @@ class TestCipherPy(unittest.TestCase):
 
     def test_encryption_and_validation(self):
         cipher = CipherPy()
-        data = "Hello World!"
+        data = "bdc2d631-a08c-410c-8d59-96add70aa5cd"
+        encrypted_data = cipher.encrypt(data)
+
+        validation_data = "bdc2d631-a08c-410c-8d59-96add70aa5cd"
+        self.assertTrue(cipher.validate(encrypted_data, validation_data))
+
+    def test_encryption_and_validation_with_custom_salt(self):
+        cipher = CipherPy(salt="TEST")
+        data = "bdc2d631-a08c-410c-8d59-96add70aa5cd"
         encrypted_data = cipher.encrypt(data)
         print(f"Encrypted data: {encrypted_data}")
 
-        validation_data = "Hello World!"
+        validation_data = "bdc2d631-a08c-410c-8d59-96add70aa5cd"
         self.assertTrue(cipher.validate(encrypted_data, validation_data))
 
 if __name__ == '__main__':

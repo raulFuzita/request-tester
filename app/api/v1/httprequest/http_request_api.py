@@ -1,9 +1,18 @@
 from flask import Blueprint, request, jsonify
+from ....exception.httprequest.http_error import HTTPError
 from ....services.httprequest.http_request_service import HttpRequestService
 from ....model.dto.httprequest.http_request import HttpRequestDTO
+from ....authenticator.authenticate_request import authenticate_request
 
 http_request_bp = Blueprint('request', __name__)
 http_request_service = HttpRequestService()
+
+@http_request_bp.before_request
+def before_request():
+    try:
+        authenticate_request()
+    except HTTPError as e:
+        return jsonify({'error': e.message}), e.status_code
 
 @http_request_bp.route('/', methods=['GET'])
 def get_test_api():
